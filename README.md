@@ -18,7 +18,7 @@ Nexa — marketplace бизнес-задач для студенческих к�
 
 ## AI-функция
 
-Server-side endpoint `/api/analyze` использует OpenAI Structured Outputs при наличии `OPENAI_API_KEY`. Ответ валидируется через Zod. Ключ никогда не передаётся в браузер.
+Server-side endpoint `/api/analyze` использует OpenAI Structured Outputs при наличии `OPENAI_API_KEY`. Ответ валидируется через Zod. Ключ загружается Wrangler из локального `web/.dev.vars` и никогда не передаётся в браузер.
 
 Без API-ключа или при ошибке API включается детерминированный fallback. Он анализирует уже указанную информацию, выбирает ровно три недостающих аспекта и формирует карточку из описания и ответов. Поэтому полный demo flow работает офлайн.
 
@@ -60,7 +60,7 @@ Frontend не рассчитывает окончательный score и не 
 
 Основные API-контракты:
 
-- `POST /api/ai/analyze` и `POST /api/ai/build-card`;
+- `POST /api/ai/analyze`, `POST /api/ai/build-card` и `POST /api/ai/diagnostic`;
 - `GET/POST /api/tasks`, `GET/PATCH /api/tasks/:id`;
 - `POST /api/tasks/:id/confirm` и `POST /api/tasks/:id/publish`;
 - `GET/POST /api/tasks/:id/proposals`;
@@ -85,17 +85,21 @@ cd web
 npm install
 ```
 
-Создайте локальный `.env` только при необходимости реального AI:
+Для реального AI скопируйте безопасный шаблон Wrangler:
 
 ```bash
-cp .env.example .env
+copy .dev.vars.example .dev.vars
 ```
 
-```env
+Откройте `web/.dev.vars` и вставьте ключ без кавычек, пробелов и префикса `Bearer`:
+
+```dotenv
 OPENAI_API_KEY=
 ```
 
-Пустой ключ допустим — приложение использует fallback. `.env` исключён из Git.
+После сохранения перезапустите `npm run dev`. Пустой ключ допустим — приложение использует fallback. Реальный `.dev.vars` исключён из Git, а `.dev.vars.example` не содержит секретов и хранится в репозитории.
+
+Безопасная server-side диагностика доступна через `POST /api/ai/diagnostic`: режим `smoke` выполняет реальный запрос «Ответь только одним словом: OK», а режим `questions` проверяет Structured Output из трёх вопросов. Диагностика никогда не включает fallback и не возвращает API key.
 
 ## Запуск
 
