@@ -25,6 +25,7 @@ node_modules/
 .venv/
 venv/
 env/
+/env
 
 # Build, cache, and test output
 dist/

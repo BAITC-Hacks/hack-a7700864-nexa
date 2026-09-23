@@ -1,4 +1,5 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 
 export const tasks = sqliteTable("tasks", {
   id: text("id").primaryKey(),
@@ -28,6 +29,7 @@ export const teams = sqliteTable("teams", {
   interests: text("interests").notNull().default(""),
   skills: text("skills").notNull().default(""),
   technologies: text("technologies").notNull().default(""),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(sql`0`),
 });
 
 export const proposals = sqliteTable("proposals", {
@@ -40,4 +42,5 @@ export const proposals = sqliteTable("proposals", {
   prototypeUrl: text("prototype_url").notNull().default(""),
   status: text("status").notNull().default("PENDING"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().default(sql`0`),
 }, (table) => [index("idx_proposals_task_id").on(table.taskId)]);

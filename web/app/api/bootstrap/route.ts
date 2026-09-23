@@ -1,7 +1,8 @@
-import { asc, count, desc, eq } from "drizzle-orm";
+import { asc, count, desc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { proposals, tasks, teams } from "@/db/schema";
 import { demoProposals, demoTasks, demoTeams } from "@/lib/seed";
+import { marketplaceService } from "@/services/marketplace/marketplace-service";
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
       ] as unknown as Parameters<typeof db.batch>[0]);
     }
     const [taskRows, teamRows, proposalRows] = await Promise.all([
-      db.select().from(tasks).where(eq(tasks.published, true)).orderBy(desc(tasks.score), asc(tasks.title)),
+      marketplaceService.listPublished(),
       db.select().from(teams).orderBy(asc(teams.name)),
       db.select().from(proposals).orderBy(desc(proposals.createdAt)),
     ]);
