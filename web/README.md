@@ -5,7 +5,8 @@
 Основные команды:
 
 ```bash
-npm install
+npm ci
+npm run db:migrate:local
 npm run dev
 npm run typecheck
 npm run lint
@@ -31,7 +32,7 @@ The Sites initializer copies the shared starter and selects managed-linux only w
 
 Run `node <plugin-root>/scripts/configure-execution-profile.mjs` only when the profile is unknown for the current checkout and environment. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
 
-This starter does not use `wrangler.jsonc`.
+The application runtime does not use a hand-written `wrangler.jsonc`; Vite generates its Worker config. The tracked `wrangler.d1.jsonc` is limited to reproducible local D1 migration commands.
 
 `install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
 
@@ -116,13 +117,13 @@ Use SIWC for account pages, user-specific dashboards, saved records, and write a
 
 ## Local D1 migrations
 
-For a D1-backed local preview, generate SQL with `npm run db:generate`. Build once through the Sites skill's build entrypoint (or `npm run build` for standalone use) to generate `dist/server/wrangler.json`, rebuilding if bindings change. From the project root, apply each pending migration in order:
+For a D1-backed local preview, generate SQL with `npm run db:generate`. Apply all pending tracked migrations with:
 
 ```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
+npm run db:migrate:local
 ```
 
-Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
+Wrangler reads the D1 binding and `drizzle/` migration directory from `wrangler.d1.jsonc`, records applied migrations, and stores the local database under `.wrangler/state`. This updates only the preview database; publishing applies production migrations separately. The first `/api/bootstrap` request inserts demo data when the database is empty.
 
 ## Diagnostic Commands
 
@@ -131,6 +132,7 @@ Replace the filename with the pending migration and `DB` with your D1 binding na
 - `npm run build`: build the deployable Sites artifact
 - `npm run start`: preview the built Worker locally with D1/R2 support
 - `npm run db:generate`: generate Drizzle migrations after schema changes
+- `npm run db:migrate:local`: apply pending tracked migrations to the local D1 preview database
 
 When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
 

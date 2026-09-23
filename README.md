@@ -81,8 +81,23 @@ UI поддерживает роли «Бизнес» и «Студент» бе
 Требуется Node.js 22.13 или новее.
 
 ```bash
+git clone https://github.com/BAITC-Hacks/hack-a7700864-nexa.git
+cd hack-a7700864-nexa/web
+npm ci
+copy .dev.vars.example .dev.vars
+npm run db:migrate:local
+npm run dev
+```
+
+В PowerShell или Command Prompt используется показанная команда `copy`. В macOS/Linux создайте локальный файл командой `cp .dev.vars.example .dev.vars`. Миграции применяются к локальной D1 в `.wrangler/state`; при первом запросе к `/api/bootstrap` приложение автоматически добавляет демонстрационные задачи, команды и предложения. Wrangler хранит список миграций, применённых этой командой. Если старая локальная база создавалась ручными `d1 execute`, удалите только её локальное состояние и повторите setup; это не затрагивает удалённую D1.
+
+Если репозиторий уже клонирован, достаточно выполнить из его корня:
+
+```bash
 cd web
-npm install
+npm ci
+npm run db:migrate:local
+npm run dev
 ```
 
 Для реального AI скопируйте безопасный шаблон Wrangler:

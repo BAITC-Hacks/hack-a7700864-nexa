@@ -38,6 +38,10 @@ env/
 # Build, cache, and test output
 dist/
 build/
+!web/build/
+web/build/*
+!web/build/sites-vite-plugin.ts
+!web/build/sites-vite-plugin.LICENSE
 out/
 coverage/
 .coverage
