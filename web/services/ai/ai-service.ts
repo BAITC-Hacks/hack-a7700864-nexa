@@ -111,6 +111,23 @@ function parseStructuredOutput(json: unknown, model: string) {
   } catch { throw new AIServiceError("INVALID_RESPONSE", 502, model, true); }
 }
 
+function applySafeCardDefaults(
+  card: z.infer<typeof draftSchema>,
+  description: string,
+  questions: ClarificationQuestion[],
+  answers: string[],
+): TaskCard {
+  const defaults = fallbackCard(description, questions, answers);
+  return {
+    ...card,
+    title: card.title.trim() || defaults.title,
+    category: card.category.trim() || defaults.category,
+    context: card.context.trim() || description,
+    need: card.need.trim() || description,
+    originalDescription: description,
+  };
+}
+
 export class AIService {
   async analyzeDraft(description: string): Promise<AIResult> { return this.run(description, [], []); }
   async buildTaskCard(description: string, questions: ClarificationQuestion[], answers: string[]): Promise<AIResult> { return this.run(description, questions, answers); }
@@ -119,7 +136,14 @@ export class AIService {
 
   async diagnosticSmokeTest() {
     const startedAt = Date.now();
-    const { json, model } = await requestOpenAI({ messages: [{ role: "user", content: "Ответь только одним словом: OK" }] });
+    const { json, model } = await requestOpenAI({
+      messages: [
+        { role: "system", content: "Return exactly the uppercase ASCII token OK and nothing else." },
+        { role: "user", content: "Ответь только одним словом: OK" },
+      ],
+      temperature: 0,
+      max_tokens: 2,
+    });
     const completion = completionSchema.safeParse(json);
     if (!completion.success) throw new AIServiceError("INVALID_RESPONSE", 502, model, true);
     return { ok: true, envLoaded: true, provider: "openai" as const, model, realApiUsed: true, fallbackUsed: false, status: 200, response: completion.data.choices[0].message.content.trim(), latencyMs: Date.now() - startedAt };
@@ -143,7 +167,8 @@ export class AIService {
         : `Проанализируй описание бизнес-задачи и задай ровно 3 наиболее полезных уточняющих вопроса. Используй разные id. Не спрашивай то, что уже указано. Поле card должно быть null.\nОписание: ${description}`;
       const { json, model } = await requestOpenAI(structuredRequest(prompt));
       const parsed = parseStructuredOutput(json, model);
-      return { questions: parsed.questions, card: parsed.card ? { ...parsed.card, originalDescription: description } : null, source: "openai" };
+      if (questions.length === 3 && !parsed.card) throw new AIServiceError("INVALID_RESPONSE", 502, model, true);
+      return { questions: parsed.questions, card: parsed.card ? applySafeCardDefaults(parsed.card, description, questions, answers) : null, source: "openai" };
     } catch (error) {
       const code = error instanceof AIServiceError ? error.code : "UNKNOWN_ERROR";
       console.error("ai_fallback_used", { code });
