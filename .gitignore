@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 !.env.sample
+.wrangler/
+.sites-runtime/
+.next/
+*.tsbuildinfo
 *.pem
 *.key
 *.p12
