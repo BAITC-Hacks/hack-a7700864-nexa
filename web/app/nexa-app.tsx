@@ -15,7 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { calculateScore, savedScoreBaseline, scoreDelta } from "@/lib/score";
 import { demoProposals, demoTasks, demoTeams } from "@/lib/seed";
 import { emptyCard, type ClarificationQuestion, type Proposal, type TaskCard, type Team } from "@/lib/domain";
-import { getHomeDestination, type HomeAction } from "@/lib/home-navigation";
+import { getHomeDestination, getRoleDestination, type HomeAction } from "@/lib/home-navigation";
 
 type Role = "business" | "student";
 type View = "home" | "create" | "market" | "mytasks" | "detail";
@@ -90,6 +90,13 @@ export function NexaApp() {
   const selectedProposals = proposals.filter((proposal) => proposal.taskId === selected?.id).map((proposal) => ({ ...proposal, team: teams.find((team) => team.id === proposal.teamId) }));
   const navigate = (next: View) => { setView(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const startHomeFlow = (action: HomeAction) => { const destination = getHomeDestination(action); setRole(destination.role); if (destination.view === "create") setStage("draft"); navigate(destination.view); };
+  const switchRole = (nextRole: Role) => {
+    const destination = getRoleDestination(nextRole);
+    if (nextRole === role && view === destination.view) return;
+    const hasUnsavedWork = view === "create" && (stage === "draft" ? description.trim().length > 0 : stage === "questions" ? description.trim().length > 0 || answers.some((answer) => answer.trim().length > 0) : dirty);
+    if (hasUnsavedWork && !window.confirm("Есть несохранённые изменения. Переключить режим и потерять их?")) return;
+    setRole(destination.role); navigate(destination.view);
+  };
   const goHome = () => navigate("home");
   const openTask = (id?: string) => { if (!id) return; setSelectedId(id); navigate("detail"); };
 
@@ -150,7 +157,7 @@ export function NexaApp() {
   return <main className="min-h-screen bg-[#f3f5f4] text-[#18201d]"><Toaster position="top-right" richColors />
     {/* A plain anchor keeps the brand usable even before client hydration. */}
     {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-    <header className="app-header"><a href="/" className="brand" onClick={(event) => { event.preventDefault(); goHome(); }} aria-label="NEXA — главная"><span>N</span><b>NEXA</b><small>BUSINESS × TALENT</small></a><nav><button className={view === "market" ? "active" : ""} onClick={() => navigate("market")}><LayoutGrid size={17} /> Каталог</button>{role === "business" && <><button className={view === "create" ? "active" : ""} onClick={() => navigate("create")}><Plus size={17} /> Создать задачу</button><button className={view === "mytasks" ? "active" : ""} onClick={() => navigate("mytasks")}><BriefcaseBusiness size={17} /> Мои задачи</button></>}</nav><Tabs value={role} onValueChange={(value) => setRole(value as Role)} className="role-tabs"><TabsList><TabsTrigger value="business"><BriefcaseBusiness /> Бизнес</TabsTrigger><TabsTrigger value="student"><GraduationCap /> Студент</TabsTrigger></TabsList></Tabs></header>
+    <header className="app-header"><a href="/" className="brand" onClick={(event) => { event.preventDefault(); goHome(); }} aria-label="NEXA — главная"><span>N</span><b>NEXA</b><small>BUSINESS × TALENT</small></a><nav><button className={view === "market" ? "active" : ""} onClick={() => navigate("market")}><LayoutGrid size={17} /> Каталог</button>{role === "business" && <><button className={view === "create" ? "active" : ""} onClick={() => navigate("create")}><Plus size={17} /> Создать задачу</button><button className={view === "mytasks" ? "active" : ""} onClick={() => navigate("mytasks")}><BriefcaseBusiness size={17} /> Мои задачи</button></>}</nav><Tabs value={role} onValueChange={(value) => switchRole(value as Role)} className="role-tabs"><TabsList><TabsTrigger value="business"><BriefcaseBusiness /> Бизнес</TabsTrigger><TabsTrigger value="student"><GraduationCap /> Студент</TabsTrigger></TabsList></Tabs></header>
 
     {view === "home" && <HomePage onStart={startHomeFlow}/>}
 
