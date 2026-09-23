@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { proposals, tasks, teams } from "@/db/schema";
 import { demoProposals, demoTasks, demoTeams } from "@/lib/seed";
 import { marketplaceService } from "@/services/marketplace/marketplace-service";
+import { taskService } from "@/services/tasks/task-service";
 
 export async function GET() {
   try {
@@ -15,12 +16,13 @@ export async function GET() {
         ...demoProposals.map((proposal) => db.insert(proposals).values(proposal)),
       ] as unknown as Parameters<typeof db.batch>[0]);
     }
-    const [taskRows, teamRows, proposalRows] = await Promise.all([
+    const [taskRows, businessTaskRows, teamRows, proposalRows] = await Promise.all([
       marketplaceService.listPublished(),
+      taskService.listAll(),
       db.select().from(teams).orderBy(asc(teams.name)),
       db.select().from(proposals).orderBy(desc(proposals.createdAt)),
     ]);
-    return Response.json({ tasks: taskRows, teams: teamRows, proposals: proposalRows });
+    return Response.json({ tasks: taskRows, businessTasks: businessTaskRows, teams: teamRows, proposals: proposalRows });
   } catch (error) {
     console.error("bootstrap_failed", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: "Хранилище временно недоступно" }, { status: 503 });

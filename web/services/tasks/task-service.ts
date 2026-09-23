@@ -19,6 +19,7 @@ export class TaskService {
   async update(id: string, input: unknown) {
     const task = normalize(input); const rating = calculateTaskRating(task);
     const [saved] = await getDb().update(tasks).set({ ...task, score: rating.score, readinessLevel: rating.level, confirmed: false, updatedAt: new Date() }).where(eq(tasks.id, id)).returning();
+    if (!saved) throw new Error("Задача не найдена");
     return { task: saved, rating };
   }
   async confirm(id: string) {

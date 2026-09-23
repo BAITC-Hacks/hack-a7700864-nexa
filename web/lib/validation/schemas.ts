@@ -13,4 +13,5 @@ export const taskInputSchema = z.object({
   successCriteria: z.string().trim().max(2000), contact: z.string().trim().max(300), interactionFormat: z.string().trim().max(500),
 });
 
-export const proposalInputSchema = z.object({ taskId: z.string().min(1).max(100), teamName: z.string().trim().min(1).max(100), solutionIdea: z.string().trim().min(1).max(2000), plan: z.string().trim().min(1).max(2000), estimatedTime: z.string().trim().min(1).max(120), prototypeUrl: z.union([z.literal(""), z.string().url().max(500)]).default("") });
+const safePrototypeUrl = z.string().url().max(500).refine((value) => /^https?:\/\//i.test(value), "Разрешены только HTTP(S)-ссылки");
+export const proposalInputSchema = z.object({ taskId: z.string().min(1).max(100), teamName: z.string().trim().min(1).max(100), solutionIdea: z.string().trim().min(1).max(2000), plan: z.string().trim().min(1).max(2000), estimatedTime: z.string().trim().min(1).max(120), prototypeUrl: z.union([z.literal(""), safePrototypeUrl]).default("") });

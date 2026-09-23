@@ -113,7 +113,8 @@ function parseStructuredOutput(json: unknown, model: string) {
 
 export class AIService {
   async analyzeDraft(description: string): Promise<AIResult> { return this.run(description, [], []); }
-  async generateTaskCard(description: string, questions: ClarificationQuestion[], answers: string[]): Promise<AIResult> { return this.run(description, questions, answers); }
+  async buildTaskCard(description: string, questions: ClarificationQuestion[], answers: string[]): Promise<AIResult> { return this.run(description, questions, answers); }
+  async generateTaskCard(description: string, questions: ClarificationQuestion[], answers: string[]): Promise<AIResult> { return this.buildTaskCard(description, questions, answers); }
   generateRecommendations(task: TaskCard) { return import("@/services/rating/rating-service").then(({ calculateTaskRating }) => calculateTaskRating(task).recommendations); }
 
   async diagnosticSmokeTest() {
