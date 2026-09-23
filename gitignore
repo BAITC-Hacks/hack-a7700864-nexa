@@ -1,7 +1,0 @@
-# Local environment variables — never commit secrets
-.env
-.env.local
-.env.*.local
-
-# Keep the safe template in Git
-!.env.example
